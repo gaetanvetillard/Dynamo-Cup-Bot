@@ -7,6 +7,7 @@ MODE = "duo"
 CATEGORY = 720675067532673038
 MAX = 50
 REGISTER_CHANNEL = 719956101109645442
+WELCOME_CHANNEL = 837048983745462342
 
 
 intents = discord.Intents.default()
@@ -168,5 +169,11 @@ async def on_message(message):
                 new_embed = discord.Embed(title="Pseudos are reseted.", colour=discord.Colour.red())
                 new_embed.set_footer(text=f"Host : {message.author}", icon_url=message.author.avatar_url)
                 await message.channel.send(embed=new_embed)
+
+@client.event
+async def on_member_join(member):
+    embed = discord.Embed(title="Nouveau membre sur le discord !", description=f"Bienvenue {member.mention}", colour=discord.Colour.gold())
+    await client.get_channel(WELCOME_CHANNEL).send(embed=embed)
+
 
 client.run(DISCORD_TOKEN)
