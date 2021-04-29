@@ -74,6 +74,7 @@ async def on_message(message):
                         break
                     i+=1
                 n=i
+                position = channel.position
             else:
                 n = 1
                 position = 0
@@ -170,10 +171,19 @@ async def on_message(message):
                 new_embed.set_footer(text=f"Host : {message.author}", icon_url=message.author.avatar_url)
                 await message.channel.send(embed=new_embed)
 
+    if message.content.startswith('$result') and message.channel.category_id == CATEGORY:
+        if message.content.startswith('$result add') and message.author.guild_permissions.administrator:
+            team = message.channel.name
+            await message.channel.send(team)
+
+
 @client.event
 async def on_member_join(member):
-    embed = discord.Embed(title="Nouveau membre sur le discord !", description=f"Bienvenue {member.mention}", colour=discord.Colour.gold())
+    _mention = f"<@!{member.id}>"
+    _guild_name = member.guild
+    embed = discord.Embed(title="Nouveau membre sur le discord !", description=f"Bienvenue {_mention} sur le serveur de la {_guild_name} !", colour=discord.Colour.gold())
     await client.get_channel(WELCOME_CHANNEL).send(embed=embed)
+
 
 
 client.run(DISCORD_TOKEN)
