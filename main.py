@@ -1,7 +1,7 @@
 import discord
-from sqlalchemy import create_engine, Table, Column, Integer, Float, MetaData, select, desc 
+from sqlalchemy import create_engine, Table, Column, Integer, Float, MetaData, select, desc, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, relationship
 import json
 import os
 
@@ -258,6 +258,12 @@ async def on_message(message):
 
         if message.content.startswith('$leaderboard') and message.author.id == 331405760544112641 and message.channel.id == LEADERBOARD_CHANNEL:
             await message.channel.send("Classement :")
+
+        if message.content.startswith('$reset_leaderboard') and message.author.id == 331405760544112641 and message.channel.id == LEADERBOARD_CHANNEL:
+            for table in reversed(db.metadata.sorted_tables):
+                session.execute(table.delete())
+            session.commit()
+            await message.channel.add_reaction('✅')
 
         if message.content.startswith('$update_leaderboard'):
             msg = update_leaderboard(message.guild)
