@@ -74,6 +74,7 @@ async def on_message(message):
                         n=i
                         break
                     i+=1
+                n=i
             else:
                 n = 1
                 position = 0
