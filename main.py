@@ -10,8 +10,7 @@ REGISTER_CHANNEL = 719956101109645442
 WELCOME_CHANNEL = 837048983745462342
 
 
-intents = discord.Intents.default()
-intents.members = True
+intents = discord.Intents().all()
 client = discord.Client(intents=intents)
 
 
