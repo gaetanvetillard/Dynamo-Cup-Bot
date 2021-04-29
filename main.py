@@ -22,7 +22,7 @@ intents = discord.Intents().all()
 client = discord.Client(intents=intents, activity=discord.Activity(type=discord.ActivityType.listening, name="!register"))
 
 
-engine = create_engine(os.environ.get('DATABASE_URL'))
+engine = create_engine(os.environ.get('DATABASE'))
 db = declarative_base()
 Session = sessionmaker(bind=engine)
 session = Session()
