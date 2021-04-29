@@ -6,7 +6,7 @@ import json
 import os
 
 
-DISCORD_TOKEN = os.environ.get(['DISCORD_TOKEN'])
+DISCORD_TOKEN = os.environ.get('DISCORD_TOKEN')
 MODE = "duo"
 CATEGORY = 720675067532673038
 MAX = 50
@@ -22,7 +22,7 @@ intents = discord.Intents().all()
 client = discord.Client(intents=intents, activity=discord.Activity(type=discord.ActivityType.listening, name="!register"))
 
 
-engine = create_engine(os.environ.get(['DATABASE_URL']))
+engine = create_engine(os.environ.get('DATABASE_URL'))
 db = declarative_base()
 Session = sessionmaker(bind=engine)
 session = Session()
