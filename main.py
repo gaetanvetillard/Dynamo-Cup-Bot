@@ -52,7 +52,7 @@ class LeaderboardID(db):
     __tablename__ = 'leaderboardID'
 
     id = Column(Integer, primary_key=True)
-    msg_id = Column(Integer, type=BigInteger)
+    msg_id = Column(BigInteger)
 
 db.metadata.create_all(engine)
 
