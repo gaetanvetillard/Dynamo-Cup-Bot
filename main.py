@@ -4,6 +4,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 import json
 import os
+from sqlalchemy.sql.sqltypes import BigInteger
 
 
 DISCORD_TOKEN = os.environ.get('DISCORD_TOKEN')
@@ -51,7 +52,7 @@ class LeaderboardID(db):
     __tablename__ = 'leaderboardID'
 
     id = Column(Integer, primary_key=True)
-    msg_id = Column(String)
+    msg_id = Column(Integer, type=BigInteger)
 
 db.metadata.create_all(engine)
 
@@ -235,7 +236,7 @@ async def on_message(message):
                     session.commit()
                     content_ = update_leaderboard(message.guild)
                     try:
-                        m = await message.guild.get_channel(LEADERBOARD_CHANNEL).fetch_message(int(session.query(LeaderboardID).filter_by(id=1).first().msg_id))
+                        m = await message.guild.get_channel(LEADERBOARD_CHANNEL).fetch_message(session.query(LeaderboardID).filter_by(id=1).first().msg_id)
                     except:
                         await message.add_reaction('❌')
                         await message.channel.send("Vous devez d'abord initialiser le classement.")
@@ -302,7 +303,7 @@ async def on_message(message):
             msg = await message.guild.get_channel(LEADERBOARD_CHANNEL).send("**Classement :**")
             leaderboard_id = session.query(LeaderboardID).filter_by(id=1).first()
             if leaderboard_id == None:
-                add_id = LeaderboardID(msg_id = str(msg.id))
+                add_id = LeaderboardID(msg_id = msg.id)
                 session.add(add_id)
             else:
                 leaderboard_id = str(msg.id)
@@ -320,7 +321,7 @@ async def on_message(message):
         elif message.content.startswith('$update_leaderboard'):
             content_ = update_leaderboard(message.guild)
             try:
-                m = await message.guild.get_channel(LEADERBOARD_CHANNEL).fetch_message(int(session.query(LeaderboardID).filter_by(id=1).first().msg_id))
+                m = await message.guild.get_channel(LEADERBOARD_CHANNEL).fetch_message(session.query(LeaderboardID).filter_by(id=1).first().msg_id)
             except:
                 await message.add_reaction('❌')
                 await message.channel.send("Vous devez d'abord initialiser le classement.")
@@ -350,7 +351,6 @@ async def on_message(message):
                 embed.add_field(name="Points par Kill", value=content_kills, inline=True)
                 await channel_.send(embed=embed)
                 await message.add_reaction('✅')
-
 
         elif message.content.startswith('!delete_channels'):
             guild = message.guild
