@@ -79,6 +79,27 @@ async def on_message(message):
     if message.author == client.user:
         return
 
+    if message.content.startswith('!help'):
+        first_embed = discord.Embed(title="Commandes disponibles", description="Liste des commandes disponible pour tous.", colour=discord.Colour.blue())
+        first_embed.add_field(name="!register", value="Permet de vous inscrire sur le tournois.", inline=False)
+        first_embed.add_field(name="!unregister", value="Permet de vous désinscrire si vous êtes dans une équipe.", inline=False)
+        first_embed.add_field(name="!slots", value="Affiche le nombre d'équipes inscrites", inline=False)
+        first_embed.add_field(name="!match_history", value="Affiche votre historique de parties (à utiliser dans le salon dédié à **votre équipe**)", inline=False)
+        second_embed = discord.Embed(title="Commandes disponibles", description="Liste des commandes disponibles pour les administrateurs.", colour=discord.Colour.purple())
+        second_embed.add_field(name="$status", value="Affiche le statut du bot.", inline=False)
+        second_embed.add_field(name="$clear", value="$clear {LIMIT} : efface les 50 derniers ou jusqu'à la limite indiquée.", inline=False)
+        second_embed.add_field(name="$leaderboard", value="Initialise et affiche le classement (à utiliser dans le salon **admin**).", inline=False)
+        second_embed.add_field(name="$update_leaderboard", value="Met à jour manuellement le classement (à utiliser dans le salon **admin**).", inline=False)
+        second_embed.add_field(name="$reset_leaderboard", value="Réinitialise le classement (à utiliser dans le salon **admin**).", inline=False)
+        second_embed.add_field(name="$add result {TOP} {KILLS}", value="Ajoute un résultat (à utiliser dans le salon de chaque **équipe**).", inline=False)
+        second_embed.add_field(name="$points {CHANNEL}", value="Affiche le barème des points dans le channel souhaité (à utiliser dans le salon **admin**).", inline=False)
+        second_embed.add_field(name="$delete_channels", value="Supprime tous les salons des équipes (à utiliser dans le salon **admin**).", inline=False)
+        second_embed.add_field(name="$delete_roles", value="Supprime tous les rôles des équipes (à utiliser dans le salon **admin**).", inline=False)
+        second_embed.add_field(name="$reset_pseudos", value="Réinitialise les pseudos (à utiliser dans le salon **admin**).", inline=False)
+        await message.channel.send(embed=first_embed)
+        await message.channel.send(embed=second_embed)
+
+
     if message.channel.id == REGISTER_CHANNEL:
         if message.content.startswith("!register"):
 
@@ -276,13 +297,13 @@ async def on_message(message):
 
 
     if message.author.guild_permissions.administrator:
-        if message.content.startswith('!status'):
+        if message.content.startswith('$status'):
             new_embed = discord.Embed(title="Status", description=f":green_circle: Bot {discord.Status.online}", colour=discord.Colour.red())
             new_embed.set_footer(text=f"Host : {message.author}", icon_url=message.author.avatar_url)
             await message.channel.send(embed=new_embed)
             return
 
-        elif message.content.startswith('!clear'):
+        elif message.content.startswith('$clear'):
             if len(message.content.split(' ')) == 2:
                 amount = message.content.split(' ')[-1]
                 try:
@@ -352,7 +373,7 @@ async def on_message(message):
                 await channel_.send(embed=embed)
                 await message.add_reaction('✅')
 
-        elif message.content.startswith('!delete_channels'):
+        elif message.content.startswith('$delete_channels'):
             guild = message.guild
             for channel in guild.channels:
                 if channel.name.split('-')[0] == MODE or channel.name.split('-')[0] == 'trio':
@@ -362,7 +383,7 @@ async def on_message(message):
             await message.channel.send(embed=new_embed)
             return
 
-        elif message.content.startswith('!delete_roles'):
+        elif message.content.startswith('$delete_roles'):
             guild = message.guild
             for role in guild.roles:
                 if MODE in role.name:
@@ -372,7 +393,7 @@ async def on_message(message):
             await message.channel.send(embed=new_embed)
             return
 
-        elif message.content.startswith('!reset_pseudos'):
+        elif message.content.startswith('$reset_pseudos'):
             guild = message.guild
             for member in guild.members:
                 if member.nick:
@@ -385,8 +406,6 @@ async def on_message(message):
             new_embed.set_footer(text=f"Host : {message.author}", icon_url=message.author.avatar_url)
             await message.channel.send(embed=new_embed)
             return
-
-
 
 @client.event
 async def on_member_join(member):
