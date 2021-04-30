@@ -80,12 +80,12 @@ async def on_message(message):
         return
 
     if message.content.startswith('!help'):
-        first_embed = discord.Embed(title="Commandes disponibles", description="Liste des commandes disponible pour tous.", colour=discord.Colour.blue())
+        first_embed = discord.Embed(title="Commandes disponibles pour @everyone", description="Liste des commandes disponible pour tous.", colour=discord.Colour.blue())
         first_embed.add_field(name="!register", value="Permet de vous inscrire sur le tournois.", inline=False)
         first_embed.add_field(name="!unregister", value="Permet de vous désinscrire si vous êtes dans une équipe.", inline=False)
         first_embed.add_field(name="!slots", value="Affiche le nombre d'équipes inscrites", inline=False)
         first_embed.add_field(name="!match_history", value="Affiche votre historique de parties (à utiliser dans le salon dédié à **votre équipe**)", inline=False)
-        second_embed = discord.Embed(title="Commandes disponibles", description="Liste des commandes disponibles pour les administrateurs.", colour=discord.Colour.purple())
+        second_embed = discord.Embed(title="Commandes disponibles pour les administrateurs", description="Liste des commandes disponible pour les administrateurs.", colour=discord.Colour.purple())
         second_embed.add_field(name="$status", value="Affiche le statut du bot.", inline=False)
         second_embed.add_field(name="$clear", value="$clear {LIMIT} : efface les 50 derniers ou jusqu'à la limite indiquée.", inline=False)
         second_embed.add_field(name="$leaderboard", value="Initialise et affiche le classement (à utiliser dans le salon **admin**).", inline=False)
