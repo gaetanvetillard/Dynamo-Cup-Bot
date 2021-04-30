@@ -13,6 +13,7 @@ MAX = 50
 REGISTER_CHANNEL = 719956101109645442
 WELCOME_CHANNEL = 837048983745462342
 LEADERBOARD_CHANNEL = 837458508554305536
+ADMIN_COMMANDS = 837636396263931916
 with open("tops.json") as f:
     TOP = json.load(f)
     f.close()
@@ -36,7 +37,6 @@ class Leaderboard(db):
     score = Column(Integer)
     games = relationship("Game", back_populates="team")
 
-
 class Game(db):
     __tablename__ = 'game'
 
@@ -47,6 +47,11 @@ class Game(db):
     kills = Column(Integer)
     points = Column(Integer)
 
+class LeaderboardID(db):
+    __tablename__ = 'leaderboardID'
+
+    id = Column(Integer, primary_key=True)
+    msg_id = Column(Integer)
 
 db.metadata.create_all(engine)
 
@@ -68,14 +73,12 @@ def update_leaderboard(guild):
         _message += f'__{all_teams.index(team) + 1} - {team.score} points :__ **{players}**\n'
     return _message
 
-
-
 @client.event
 async def on_message(message):
+    if message.author == client.user:
+        return
+
     if message.channel.id == REGISTER_CHANNEL:
-        if message.author == client.user:
-            return
-        
         if message.content.startswith("!register"):
 
             try:
@@ -155,16 +158,18 @@ async def on_message(message):
             new_embed = discord.Embed(title="Votre équipe a bien été inscrite.", colour=discord.Colour.green())
             new_embed.set_footer(text=f"Host : {message.author}", icon_url=message.author.avatar_url)
             await message.channel.send(embed=new_embed)
-
-        if message.content.startswith("!slots"):
+            return
+    
+        elif message.content.startswith("!slots"):
             guild = message.guild
             category = guild.get_channel(CATEGORY)
             all_channels = [channel.name for channel in category.channels if MODE in channel.name]
             new_embed = discord.Embed(title="Slots", description=f"Il y a : {len(all_channels)} {MODE}s", colour=discord.Colour.gold())
             new_embed.set_footer(text=f"Host : {message.author}", icon_url=message.author.avatar_url)
             await message.channel.send(embed=new_embed)
+            return
 
-        if message.content.startswith("!unregister"):
+        elif message.content.startswith("!unregister"):
             guild = message.guild
             category = guild.get_channel(CATEGORY)
             author = message.author
@@ -196,38 +201,8 @@ async def on_message(message):
                 new_embed = discord.Embed(title="Impossible de vous désinscrire", description=f"Vous n'êtes dans aucune team.", colour=discord.Colour.red())
                 new_embed.set_footer(text=f"Host : {message.author}", icon_url=message.author.avatar_url)
                 await message.channel.send(embed=new_embed)
-  
-        if message.author.guild_permissions.administrator:
-            if message.content.startswith('!delete_channels'):
-                guild = message.guild
-                for channel in guild.channels:
-                    if channel.name.split('-')[0] == MODE or channel.name.split('-')[0] == 'trio':
-                        await channel.delete()
-                new_embed = discord.Embed(title="Channels are deleted.", colour=discord.Colour.red())
-                new_embed.set_footer(text=f"Host : {message.author}", icon_url=message.author.avatar_url)
-                await message.channel.send(embed=new_embed)
+            return
 
-            if message.content.startswith('!delete_roles'):
-                guild = message.guild
-                for role in guild.roles:
-                    if MODE in role.name:
-                        await role.delete()
-                new_embed = discord.Embed(title="Roles are deleted.", colour=discord.Colour.red())
-                new_embed.set_footer(text=f"Host : {message.author}", icon_url=message.author.avatar_url)
-                await message.channel.send(embed=new_embed)
-
-            if message.content.startswith('!reset_pseudos'):
-                guild = message.guild
-                for member in guild.members:
-                    if member.nick:
-                        if MODE in member.nick.lower():
-                            try:
-                                await member.edit(nick=member.name)
-                            except:
-                                pass
-                new_embed = discord.Embed(title="Pseudos are reseted.", colour=discord.Colour.red())
-                new_embed.set_footer(text=f"Host : {message.author}", icon_url=message.author.avatar_url)
-                await message.channel.send(embed=new_embed)
 
     if message.channel.category_id == CATEGORY:
         if message.content.startswith('$result add') and message.author.guild_permissions.administrator:
@@ -235,40 +210,68 @@ async def on_message(message):
                 team_num = message.channel.name.split('-')[-1]
                 top = message.content.split(' ')[2]
                 kills = message.content.split(' ')[3]
-                points = TOP[top] + int(kills)
-                #check team in leaderboard
-                team = session.query(Leaderboard).filter_by(team=team_num).first()
-                if team == None:
-                    team = Leaderboard(
-                        team=team_num,
-                        score=0,
+                if int(top) > 0 and int(top) <= 100 and int(kills) < 50:
+                    try:
+                        points = TOP[top] + int(kills)
+                    except KeyError:
+                        points = int(kills)
+                    #check team in leaderboard
+                    team = session.query(Leaderboard).filter_by(team=team_num).first()
+                    if team == None:
+                        team = Leaderboard(
+                            team=team_num,
+                            score=0,
+                        )
+                        session.add(team)
+                    game_result = Game(
+                        team=team,
+                        top=int(top),
+                        kills=int(kills),
+                        points=points
                     )
-                    session.add(team)
-                game_result = Game(
-                    team=team,
-                    top=int(top),
-                    kills=int(kills),
-                    points=points
-                )
-                session.add(game_result)
-                #Update score on leaderboard
-                team.score += points
-                session.commit()
-                await message.add_reaction('✅')
+                    session.add(game_result)
+                    #Update score on leaderboard
+                    team.score += points
+                    session.commit()
+                    content_ = update_leaderboard(message.guild)
+                    try:
+                        m = await message.guild.get_channel(LEADERBOARD_CHANNEL).fetch_message(session.query(LeaderboardID).filter_by(id=1).first().msg_id)
+                    except:
+                        await message.add_reaction('❌')
+                        await message.channel.send("Vous devez d'abord initialiser le classement.")
+                        return
+                    await m.edit(content=f'**Classement :**\n\n{content_}')
+                    await message.add_reaction('✅')
+                else:
+                    await message.add_reaction('❌')
+            else:
+                await message.add_reaction('❌')
+            return
 
-        if message.content.startswith('$leaderboard') and message.author.id == 331405760544112641 and message.channel.id == LEADERBOARD_CHANNEL:
-            await message.channel.send("Classement :")
+        elif message.content.startswith('$result add'):
+            await message.channel.send('Vous devez être administrateur pour pouvoir ajouter des résultats.')
+            await message.add_reaction('❌')
+            return
 
-        if message.content.startswith('$reset_leaderboard') and message.author.id == 331405760544112641 and message.channel.id == LEADERBOARD_CHANNEL:
-            for table in reversed(db.metadata.sorted_tables):
-                session.execute(table.delete())
-            session.commit()
-            await message.channel.add_reaction('✅')
-
-        if message.content.startswith('$update_leaderboard'):
-            msg = update_leaderboard(message.guild)
-            await message.channel.purge(limit=15)
-            await message.channel.send(f'**Classement :**\n\n{msg}')
+        if message.content.startswith('!match_history'):
+            try:
+                team_num = int(message.channel.name.split('-')[-1])
+            except:
+                return
+            #Find Team in leaderboard Database
+            team = session.query(Leaderboard).filter_by(team=team_num).first()
+            if team == None or len(team.games) == 0:
+                embed = discord.Embed(title="Historique des matchs :", description=f"Aucun match trouvé pour l'équipe {MODE} {team_num}.")
+                embed.set_footer(text=f"Host : {message.author}", icon_url=message.author.avatar_url)
+                await message.channel.send(embed=embed)
+            elif len(team.games) > 0:
+                content = f"__**Historique de l'équipe {team.team}**__\n\n"
+                for game in team.games:
+                    content += f"__Game n° {team.games.index(game) + 1} :__ TOP {game.top} - {game.kills} Kills => {game.points}pts\n"
+                embed = discord.Embed(title="Historique des matchs :", description=content)
+                embed.set_footer(text=f"Host : {message.author}", icon_url=message.author.avatar_url)
+                await message.channel.send(embed=embed)
+            return
 
 
     if message.author.guild_permissions.administrator:
@@ -276,8 +279,9 @@ async def on_message(message):
             new_embed = discord.Embed(title="Status", description=f":green_circle: Bot {discord.Status.online}", colour=discord.Colour.red())
             new_embed.set_footer(text=f"Host : {message.author}", icon_url=message.author.avatar_url)
             await message.channel.send(embed=new_embed)
+            return
 
-        if message.content.startswith('!clear'):
+        elif message.content.startswith('!clear'):
             if len(message.content.split(' ')) == 2:
                 amount = message.content.split(' ')[-1]
                 try:
@@ -289,8 +293,98 @@ async def on_message(message):
             await message.channel.purge(limit=amount)
             new_embed = discord.Embed(title="Success.", description=f"{amount} messages are deleted.", colour=discord.Colour.green())
             new_embed.set_footer(text=f"Host : {message.author}", icon_url=message.author.avatar_url)
-            await message.channel.send(embed=new_embed)
+            bot_msg = await message.channel.send(embed=new_embed)
+            await bot_msg.delete()
+            return
 
+    if message.author.guild_permissions.administrator and message.channel.id == ADMIN_COMMANDS:
+        if message.content.startswith('$leaderboard') and message.author.id == 331405760544112641:
+            msg = await message.guild.get_channel(LEADERBOARD_CHANNEL).send("**Classement :**")
+            leaderboard_id = session.query(LeaderboardID).filter_by(id=1).first()
+            if leaderboard_id == None:
+                add_id = LeaderboardID(msg_id = msg.id)
+                session.add(add_id)
+            else:
+                leaderboard_id = msg.id
+            session.commit()
+            await message.add_reaction('✅')
+            return
+
+        elif message.content.startswith('$reset_leaderboard') and message.author.id == 331405760544112641:
+            for table in reversed(db.metadata.sorted_tables):
+                session.execute(table.delete())
+            session.commit()
+            await message.add_reaction('✅')
+            return
+
+        elif message.content.startswith('$update_leaderboard'):
+            content_ = update_leaderboard(message.guild)
+            try:
+                m = await message.guild.get_channel(LEADERBOARD_CHANNEL).fetch_message(session.query(LeaderboardID).filter_by(id=1).first().msg_id)
+            except:
+                await message.add_reaction('❌')
+                await message.channel.send("Vous devez d'abord initialiser le classement.")
+                return
+            await m.edit(content=f'**Classement :**\n\n{content_}')
+            await message.add_reaction('✅')
+            return
+
+        elif message.content.startswith('$points'):
+            if len(message.content.split(' ')) == 2:
+                try:
+                    channel_id = int(message.content.split(' ')[-1])
+                except:
+                    try:
+                        channel_id = int(message.content.split(' ')[-1][2:-1])
+                    except:
+                        await message.add_reaction('❌')
+                        return
+                channel_ = message.guild.get_channel(channel_id)
+                await channel_.purge(limit=50)
+                content_tops = ""
+                for top in TOP:
+                    content_tops += f"**Top {top}** : {TOP[top]}pts\n"
+                content_kills = "**1 kill** = __1__pts"
+                embed = discord.Embed(title="Barème de points", colour=discord.Colour.gold())
+                embed.add_field(name="Points par Top", value=content_tops, inline=True)
+                embed.add_field(name="Points par Kill", value=content_kills, inline=True)
+                await channel_.send(embed=embed)
+                await message.add_reaction('✅')
+
+
+        elif message.content.startswith('!delete_channels'):
+            guild = message.guild
+            for channel in guild.channels:
+                if channel.name.split('-')[0] == MODE or channel.name.split('-')[0] == 'trio':
+                    await channel.delete()
+            new_embed = discord.Embed(title="Channels are deleted.", colour=discord.Colour.red())
+            new_embed.set_footer(text=f"Host : {message.author}", icon_url=message.author.avatar_url)
+            await message.channel.send(embed=new_embed)
+            return
+
+        elif message.content.startswith('!delete_roles'):
+            guild = message.guild
+            for role in guild.roles:
+                if MODE in role.name:
+                    await role.delete()
+            new_embed = discord.Embed(title="Roles are deleted.", colour=discord.Colour.red())
+            new_embed.set_footer(text=f"Host : {message.author}", icon_url=message.author.avatar_url)
+            await message.channel.send(embed=new_embed)
+            return
+
+        elif message.content.startswith('!reset_pseudos'):
+            guild = message.guild
+            for member in guild.members:
+                if member.nick:
+                    if MODE in member.nick.lower():
+                        try:
+                            await member.edit(nick=member.name)
+                        except:
+                            pass
+            new_embed = discord.Embed(title="Pseudos are reseted.", colour=discord.Colour.red())
+            new_embed.set_footer(text=f"Host : {message.author}", icon_url=message.author.avatar_url)
+            await message.channel.send(embed=new_embed)
+            return
 
 
 
