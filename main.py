@@ -1,5 +1,5 @@
 import discord
-from sqlalchemy import create_engine, Table, Column, Integer, Float, MetaData, select, desc, ForeignKey
+from sqlalchemy import create_engine, Table, Column, Integer,String, MetaData, select, desc, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 import json
