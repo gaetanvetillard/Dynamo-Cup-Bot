@@ -51,7 +51,7 @@ class LeaderboardID(db):
     __tablename__ = 'leaderboardID'
 
     id = Column(Integer, primary_key=True)
-    msg_id = Column(Integer)
+    msg_id = Column(String)
 
 db.metadata.create_all(engine)
 
@@ -235,7 +235,7 @@ async def on_message(message):
                     session.commit()
                     content_ = update_leaderboard(message.guild)
                     try:
-                        m = await message.guild.get_channel(LEADERBOARD_CHANNEL).fetch_message(session.query(LeaderboardID).filter_by(id=1).first().msg_id)
+                        m = await message.guild.get_channel(LEADERBOARD_CHANNEL).fetch_message(int(session.query(LeaderboardID).filter_by(id=1).first().msg_id))
                     except:
                         await message.add_reaction('❌')
                         await message.channel.send("Vous devez d'abord initialiser le classement.")
@@ -302,10 +302,10 @@ async def on_message(message):
             msg = await message.guild.get_channel(LEADERBOARD_CHANNEL).send("**Classement :**")
             leaderboard_id = session.query(LeaderboardID).filter_by(id=1).first()
             if leaderboard_id == None:
-                add_id = LeaderboardID(msg_id = msg.id)
+                add_id = LeaderboardID(msg_id = str(msg.id))
                 session.add(add_id)
             else:
-                leaderboard_id = msg.id
+                leaderboard_id = str(msg.id)
             session.commit()
             await message.add_reaction('✅')
             return
@@ -320,7 +320,7 @@ async def on_message(message):
         elif message.content.startswith('$update_leaderboard'):
             content_ = update_leaderboard(message.guild)
             try:
-                m = await message.guild.get_channel(LEADERBOARD_CHANNEL).fetch_message(session.query(LeaderboardID).filter_by(id=1).first().msg_id)
+                m = await message.guild.get_channel(LEADERBOARD_CHANNEL).fetch_message(int(session.query(LeaderboardID).filter_by(id=1).first().msg_id))
             except:
                 await message.add_reaction('❌')
                 await message.channel.send("Vous devez d'abord initialiser le classement.")
