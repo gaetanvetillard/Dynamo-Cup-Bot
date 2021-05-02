@@ -151,6 +151,7 @@ async def on_message(message):
             if len(all_channels) > 0 and len(all_channels) <= MAX:
                 for channel in all_channels:
                     if int(channel.name.split('-')[-1]) != i:
+                        print()
                         position = channel.position - 1
                         n=i
                         break
@@ -327,17 +328,20 @@ async def on_message(message):
                 add_id = LeaderboardID(msg_id = msg.id)
                 session.add(add_id)
             else:
-                leaderboard_id = str(msg.id)
+                leaderboard_id.msg_id = str(msg.id)
             session.commit()
             await message.add_reaction('✅')
             return
 
         elif message.content.startswith('$reset_leaderboard') and message.author.id == 331405760544112641:
-            for table in reversed(db.metadata.sorted_tables):
-                session.execute(table.delete())
+            all_teams = session.query(Leaderboard).all()
+            for team in all_teams:
+                session.delete(team)
+            all_games = session.query(Game).all()
+            for game in all_games:
+                session.delete(game)
             session.commit()
             await message.add_reaction('✅')
-            db.metadata.create_all(engine)
             return
 
         elif message.content.startswith('$update_leaderboard'):
@@ -363,7 +367,6 @@ async def on_message(message):
                         await message.add_reaction('❌')
                         return
                 channel_ = message.guild.get_channel(channel_id)
-                await channel_.purge(limit=50)
                 content_tops = ""
                 for top in TOP:
                     content_tops += f"**Top {top}** : {TOP[top]}pts\n"
