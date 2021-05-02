@@ -352,7 +352,7 @@ async def on_message(message):
             content_ = update_leaderboard(message.guild)
             try:
                 # m = await message.guild.get_channel(LEADERBOARD_CHANNEL).fetch_message(session.query(LeaderboardID).filter_by(id=1).first().msg_id)
-                await message.guild.get_channel(LEADERBOARD_CHANNEL).fetch_message(LEADERBOARD_CHANNEL)
+                m = await message.guild.get_channel(LEADERBOARD_CHANNEL).fetch_message(LEADERBOARD_CHANNEL)
             except:
                 await message.add_reaction('❌')
                 await message.channel.send("Vous devez d'abord initialiser le classement.")
