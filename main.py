@@ -337,6 +337,7 @@ async def on_message(message):
                 session.execute(table.delete())
             session.commit()
             await message.add_reaction('✅')
+            db.metadata.create_all(engine)
             return
 
         elif message.content.startswith('$update_leaderboard'):
