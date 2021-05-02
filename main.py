@@ -261,7 +261,8 @@ async def on_message(message):
                     session.commit()
                     content_ = update_leaderboard(message.guild)
                     try:
-                        m = await message.guild.get_channel(LEADERBOARD_CHANNEL).fetch_message(session.query(LeaderboardID).filter_by(id=1).first().msg_id)
+                        # m = await message.guild.get_channel(LEADERBOARD_CHANNEL).fetch_message(session.query(LeaderboardID).filter_by(id=1).first().msg_id)
+                        m = await message.guild.get_channel(LEADERBOARD_CHANNEL).fetch_message(LEADERBOARD_MSG)
                     except:
                         await message.add_reaction('❌')
                         await message.channel.send("Vous devez d'abord initialiser le classement.")
@@ -350,7 +351,8 @@ async def on_message(message):
         elif message.content.startswith('$update_leaderboard'):
             content_ = update_leaderboard(message.guild)
             try:
-                m = await message.guild.get_channel(LEADERBOARD_CHANNEL).fetch_message(session.query(LeaderboardID).filter_by(id=1).first().msg_id)
+                # m = await message.guild.get_channel(LEADERBOARD_CHANNEL).fetch_message(session.query(LeaderboardID).filter_by(id=1).first().msg_id)
+                await message.guild.get_channel(LEADERBOARD_CHANNEL).fetch_message(LEADERBOARD_CHANNEL)
             except:
                 await message.add_reaction('❌')
                 await message.channel.send("Vous devez d'abord initialiser le classement.")
