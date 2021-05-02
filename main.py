@@ -445,6 +445,84 @@ async def on_message(message):
                 await message.channel.send(embed=new_embed)
             return
 
+        elif message.content.startswith("$register"):
+
+            try:
+                player_1 = message.mentions[0]
+                player_2 = message.mentions[1]
+        
+            except:
+                new_embed = discord.Embed(title="Mauvais Format", description="Format: $register @player_1 @player_2", colour=discord.Colour.red())
+                new_embed.set_footer(text=f"Host : {message.author}", icon_url=message.author.avatar_url)
+                await message.channel.send(embed=new_embed)
+                return
+
+            if player_1.id == player_2.id:
+                    new_embed = discord.Embed(title="Vous ne pouvez pas jouer en solo !", description="Merci de réessayer.", colour=discord.Colour.red())
+                    new_embed.set_footer(text=f"Host : {message.author}", icon_url=message.author.avatar_url)
+                    await message.channel.send(embed=new_embed)
+                    return
+
+
+            #player 1
+            for role in player_1.roles:
+                if role.name.split('-')[0] == MODE:
+                    new_embed = discord.Embed(title="Le joueur 1 est déjà dans une équipe !", description="Merci de réessayer.", colour=discord.Colour.red())
+                    new_embed.set_footer(text=f"Host : {message.author}", icon_url=message.author.avatar_url)
+                    await message.channel.send(embed=new_embed)
+                    return
+
+            #player 2
+            for role in player_2.roles:
+                if role.name.split('-')[0] == MODE:
+                    new_embed = discord.Embed(title="Le joueur 2 est déjà dans une équipe !", description="Merci de réessayer.", colour=discord.Colour.red())
+                    new_embed.set_footer(text=f"Host : {message.author}", icon_url=message.author.avatar_url)
+                    await message.channel.send(embed=new_embed)
+                    return
+
+
+
+            guild = message.guild
+            category = guild.get_channel(CATEGORY)
+            all_channels = [channel for channel in category.channels if MODE in channel.name]
+            i=1
+            position = None
+            if len(all_channels) > 0 and len(all_channels) <= MAX:
+                for channel in all_channels:
+                    if int(channel.name.split('-')[-1]) != i:
+                        print()
+                        position = channel.position - 1
+                        n=i
+                        break
+                    i+=1
+                n=i
+                if position == None:
+                    position = channel.position
+            else:
+                n = 1
+                position = 0
+            name = MODE + '-' + str(n)
+            channel = await guild.create_text_channel(name, category=category, position=position)
+            new_role = await guild.create_role(name=name)
+            await channel.set_permissions(guild.default_role, send_messages=False, read_messages=False)
+            await channel.set_permissions(new_role, send_messages=True, read_messages=True)
+            await player_1.add_roles(new_role)
+            await player_2.add_roles(new_role)
+            try:
+                await player_1.edit(nick=f"{MODE.capitalize()} {n} | {player_1.name}")
+            except:
+                pass
+            try:
+                await player_2.edit(nick=f"{MODE.capitalize()} {n} | {player_2.name}")
+            except:
+                pass
+            
+            new_embed = discord.Embed(title="Votre équipe a bien été inscrite.", colour=discord.Colour.green())
+            new_embed.set_footer(text=f"Host : {message.author}", icon_url=message.author.avatar_url)
+            await message.channel.send(embed=new_embed)
+            return
+
+
 @client.event
 async def on_member_join(member):
     _mention = f"<@!{member.id}>"
