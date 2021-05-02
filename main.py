@@ -72,7 +72,9 @@ def update_leaderboard(guild):
                         players += " & " + member.name
         if players == "":
             players = f"{MODE.capitalize()} {team.team}"
-        _message += f'__{all_teams.index(team) + 1} - {team.score} points :__ **{players}**\n'
+        else:
+            players = f"**{players}** *({MODE.capitalize()} {team.team})*"
+        _message += f'__{all_teams.index(team) + 1} - **{team.score}** points :__ {players}\n'
     return _message
 
 @client.event
@@ -259,8 +261,7 @@ async def on_message(message):
                     session.commit()
                     content_ = update_leaderboard(message.guild)
                     try:
-                        # m = await message.guild.get_channel(LEADERBOARD_CHANNEL).fetch_message(session.query(LeaderboardID).filter_by(id=1).first().msg_id)
-                        m = await message.guild.get_channel(LEADERBOARD_CHANNEL).fetch_message(LEADERBOARD_MSG)
+                        m = await message.guild.get_channel(LEADERBOARD_CHANNEL).fetch_message(session.query(LeaderboardID).filter_by(id=1).first().msg_id)
                     except:
                         await message.add_reaction('❌')
                         await message.channel.send("Vous devez d'abord initialiser le classement.")
@@ -349,12 +350,27 @@ async def on_message(message):
         elif message.content.startswith('$update_leaderboard'):
             content_ = update_leaderboard(message.guild)
             try:
-                m = await message.guild.get_channel(LEADERBOARD_CHANNEL).fetch_message(LEADERBOARD_MSG)
+                m = await message.guild.get_channel(LEADERBOARD_CHANNEL).fetch_message(session.query(LeaderboardID).filter_by(id=1).first().msg_id)
             except:
                 await message.add_reaction('❌')
                 await message.channel.send("Vous devez d'abord initialiser le classement.")
                 return
             await m.edit(content=f'**Classement :**\n\n{content_}')
+            await message.add_reaction('✅')
+            return
+
+        elif message.content.startswith('$create_leaderboard_teams'):
+            guild = message.guild
+            category = guild.get_channel(CATEGORY)
+            all_teams = [int(channel.name.split('-')[-1]) for channel in category.channels if MODE in channel.name]
+            for team in all_teams:
+                if session.query(Leaderboard).filter_by(team=team).first() == None:
+                    team = Leaderboard(
+                            team=team,
+                            score=0,
+                        )
+                    session.add(team)
+            session.commit()
             await message.add_reaction('✅')
             return
 
@@ -523,7 +539,6 @@ async def on_message(message):
             new_embed.set_footer(text=f"Host : {message.author}", icon_url=message.author.avatar_url)
             await message.channel.send(embed=new_embed)
             return
-
 
 @client.event
 async def on_member_join(member):
