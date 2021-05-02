@@ -15,6 +15,7 @@ REGISTER_CHANNEL = 719956101109645442
 WELCOME_CHANNEL = 837048983745462342
 LEADERBOARD_CHANNEL = 837458508554305536
 ADMIN_COMMANDS = 837636396263931916
+LEADERBOARD_MSG = 838377697783840799
 with open("tops.json") as f:
     TOP = json.load(f)
     f.close()
@@ -258,7 +259,8 @@ async def on_message(message):
                     session.commit()
                     content_ = update_leaderboard(message.guild)
                     try:
-                        m = await message.guild.get_channel(LEADERBOARD_CHANNEL).fetch_message(session.query(LeaderboardID).filter_by(id=1).first().msg_id)
+                        # m = await message.guild.get_channel(LEADERBOARD_CHANNEL).fetch_message(session.query(LeaderboardID).filter_by(id=1).first().msg_id)
+                        m = await message.guild.get_channel(LEADERBOARD_CHANNEL).fetch_message(LEADERBOARD_MSG)
                     except:
                         await message.add_reaction('❌')
                         await message.channel.send("Vous devez d'abord initialiser le classement.")
@@ -347,7 +349,7 @@ async def on_message(message):
         elif message.content.startswith('$update_leaderboard'):
             content_ = update_leaderboard(message.guild)
             try:
-                m = await message.guild.get_channel(LEADERBOARD_CHANNEL).fetch_message(session.query(LeaderboardID).filter_by(id=1).first().msg_id)
+                m = await message.guild.get_channel(LEADERBOARD_CHANNEL).fetch_message(LEADERBOARD_MSG)
             except:
                 await message.add_reaction('❌')
                 await message.channel.send("Vous devez d'abord initialiser le classement.")
