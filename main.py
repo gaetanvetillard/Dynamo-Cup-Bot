@@ -411,6 +411,40 @@ async def on_message(message):
             await message.channel.send(embed=new_embed)
             return
 
+        elif message.content.startswith('$unregister'):
+            guild = message.guild
+            category = guild.get_channel(CATEGORY)
+            player = message.mentions[0]
+            team_to_delete = None
+            channel_to_delete = None
+            for role in player.roles:
+                if MODE in role.name:
+                    team_to_delete = role
+                    for channel in category.channels:
+                        if channel.name == role.name:
+                            channel_to_delete = channel
+
+            if team_to_delete != None and channel_to_delete != None:
+                new_embed = discord.Embed(title="Votre équipe a bien été désinscrite.", description=f"Désinscription du {team_to_delete.name.capitalize()}.", colour=discord.Colour.orange())
+                new_embed.set_footer(text=f"Host : {message.author}", icon_url=message.author.avatar_url)
+                
+                for member in guild.members:
+                    for role in member.roles:
+                        if role.name == team_to_delete.name:
+                            try:
+                                await member.edit(nick=member.name)
+                            except:
+                                pass
+                await team_to_delete.delete()
+                await channel_to_delete.delete()
+                await message.channel.send(embed=new_embed)
+    
+            else:
+                new_embed = discord.Embed(title="Error", description=f"{player.mention} n'est dans aucune team.", colour=discord.Colour.red())
+                new_embed.set_footer(text=f"Host : {message.author}", icon_url=message.author.avatar_url)
+                await message.channel.send(embed=new_embed)
+            return
+
 @client.event
 async def on_member_join(member):
     _mention = f"<@!{member.id}>"
