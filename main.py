@@ -73,8 +73,8 @@ def update_leaderboard(guild):
         if players == "":
             players = f"{MODE.capitalize()} {team.team}"
         else:
-            players = f"**{players}** *({MODE.capitalize()} {team.team})*"
-        _message += f'__{all_teams.index(team) + 1} - **{team.score}** points :__ {players}\n'
+            players = f"{players} *({MODE.capitalize()} {team.team})*"
+        _message += f'__{all_teams.index(team) + 1} - **{team.score}**pts :__ {players}\n'
     return _message
 
 @client.event
